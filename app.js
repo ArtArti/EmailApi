@@ -53,8 +53,9 @@ const createTransporter = (service = 'gmail') => {
       }
     }
   };
+  
+  return nodemailer.createTransport(config[service] || config.gmail);
 
-  return nodemailer.createTransporter(config[service] || config.gmail);
 };
 
 // Routes
