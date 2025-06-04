@@ -54,10 +54,19 @@ const createTransporter = (service = 'gmail') => {
     }
   };
 
-  return nodemailer.createTransport(config[service] || config.gmail);
+  return nodemailer.createTransporter(config[service] || config.gmail);
 };
 
 // Routes
+
+// Root route for Vercel
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'Art Gallery Email API is running',
+    endpoints: ['/health', '/send-email', '/send-bulk-email', '/send-template-email']
+  });
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -252,30 +261,29 @@ app.post('/send-template-email', emailLimiter, async (req, res) => {
         `
       },
       art_submission: {
-  subject: 'New Order Received for Your Artwork on Art_Gallery!',
-  html: `
-    <h2>Hello Seller</h2>
+        subject: 'New Order Received for Your Artwork on Art_Gallery!',
+        html: `
+          <h2>Hello Seller</h2>
 
-    <p>Great news! You’ve received a new order for your artwork on <strong>Art_Gallery</strong>.</p>
+          <p>Great news! You've received a new order for your artwork on <strong>Art_Gallery</strong>.</p>
 
-    <h3>🎨 Artwork Details:</h3>
-    <img src="{{imageUrl}}" alt="Artwork image" style="max-width: 100%; height: auto; border: 1px solid #ddd; padding: 4px;" />
+          <h3>🎨 Artwork Details:</h3>
+          <img src="{{imageUrl}}" alt="Artwork image" style="max-width: 100%; height: auto; border: 1px solid #ddd; padding: 4px;" />
 
-    <ul>
-      <li><strong>Description:</strong> {{description}}</li>
-      <li><strong>Dimensions:</strong> {{dimensions}}</li>
-      <li><strong>Medium:</strong> {{medium}}</li>
-    </ul>
+          <ul>
+            <li><strong>Description:</strong> {{description}}</li>
+            <li><strong>Dimensions:</strong> {{dimensions}}</li>
+            <li><strong>Medium:</strong> {{medium}}</li>
+          </ul>
 
-    <h3>🧾 Buyer Details:</h3>
-    <ul>
-      <li><strong>Full Name:</strong>{{buyerName}}</li>
-      <li><strong>Email:</strong> {{to}}</li>
-      <li><strong>Shipping Address:</strong>{{address}}</li>
-    </ul>
-  `
-},
-
+          <h3>🧾 Buyer Details:</h3>
+          <ul>
+            <li><strong>Full Name:</strong> {{buyerName}}</li>
+            <li><strong>Email:</strong> {{buyerEmail}}</li>
+            <li><strong>Shipping Address:</strong> {{address}}</li>
+          </ul>
+        `
+      },
       reset_password: {
         subject: 'Password Reset Request',
         html: `
@@ -310,8 +318,8 @@ app.post('/send-template-email', emailLimiter, async (req, res) => {
 
     Object.keys(variables).forEach(key => {
       const regex = new RegExp(`{{${key}}}`, 'g');
-      subject = subject.replace(regex, variables[key]);
-      html = html.replace(regex, variables[key]);
+      subject = subject.replace(regex, variables[key] || '');
+      html = html.replace(regex, variables[key] || '');
     });
 
     // Create transporter
@@ -360,5 +368,12 @@ app.use((req, res) => {
   });
 });
 
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
+// Export for Vercel
 module.exports = app;
