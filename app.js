@@ -360,10 +360,5 @@ app.use((req, res) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Email API server running on port ${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
-});
 
 module.exports = app;
